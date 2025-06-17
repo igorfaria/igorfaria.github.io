@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt" x-data="teaApp()" x-init="init()" :class="darkMode ? 'dark' : ''">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chás Terapêuticos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#4CAF50',
+            secondary: '#81C784',
+            background: '#F9FAFB',
+            darkbg: '#1E1E1E'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .toggle-btn {
+      @apply text-sm rounded-full px-3 py-1 transition duration-300;
+    }
+    .icon {
+      display: inline-block;
+      margin-right: 0.4rem;
+    }
+  </style>
+</head>
+<body class="bg-background dark:bg-darkbg text-gray-800 dark:text-gray-200 font-sans">
+<div class="max-w-md mx-auto p-4 space-y-4">
+  <!-- Toggle Claro/Escuro -->
+  <div class="flex justify-end">
+    <button @click="toggleTheme" class="toggle-btn bg-gray-300 dark:bg-gray-700">
+      <span x-text="darkMode ? 'Modo Claro' : 'Modo Escuro'"></span>
+    </button>
+  </div>
+
+
+    <!-- Cabeçalho -->
+  <header class="text-center">
+    <h1 class="text-2xl font-bold mb-1">🌿 Chás Terapêuticos</h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400">Descubra combinações diárias para seu bem-estar</p>
+  </header>
+
+  <!-- Chá do Dia -->
+  <section class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+    <h2 class="text-lg font-semibold mb-2">✅ Chá do Dia - <span x-text="formattedDate"></span></h2>
+
+    <!-- Manhã -->
+    <div>
+      <h3 class="text-sm font-bold text-primary flex items-center mb-1">
+        <span class="icon">🌅</span>Manhã
+      </h3>
+      <div class="flex gap-3 ml-5">
+        <template x-for="tea in todayTeas.morning" :key="tea.label">
+          <div class="text-sm">
+            <div class="font-semibold" x-text="tea.label"></div>
+            <div class="text-xs text-gray-500" x-text="tea.description"></div>
+          </div>
+        </template>
+      </div>
+      <p class="text-xs mt-1 text-gray-600 dark:text-gray-400 ml-5">🔎 Objetivo: Estimular corpo e mente logo no início do dia.</p>
+    </div>
+
+    <!-- Tarde -->
+    <div class="mt-3">
+      <h3 class="text-sm font-bold text-primary flex items-center mb-1">
+        <span class="icon">🌇</span>Tarde
+      </h3>
+      <div class="flex gap-3 ml-5">
+        <template x-for="tea in todayTeas.afternoon" :key="tea.label">
+          <div class="text-sm">
+            <div class="font-semibold" x-text="tea.label"></div>
+            <div class="text-xs text-gray-500" x-text="tea.description"></div>
+          </div>
+        </template>
+      </div>
+      <p class="text-xs mt-1 text-gray-600 dark:text-gray-400 ml-5">🔎 Objetivo: Digestão e foco suave para o resto do dia.</p>
+    </div>
+
+    <!-- Noite -->
+    <div class="mt-3">
+      <h3 class="text-sm font-bold text-primary flex items-center mb-1">
+        <span class="icon">🌙</span>Noite
+      </h3>
+      <div class="flex gap-3 ml-5">
+        <template x-for="tea in todayTeas.night" :key="tea.label">
+          <div class="text-sm">
+            <div class="font-semibold" x-text="tea.label"></div>
+            <div class="text-xs text-gray-500" x-text="tea.description"></div>
+          </div>
+        </template>
+      </div>
+      <p class="text-xs mt-1 text-gray-600 dark:text-gray-400 ml-5">🔎 Objetivo: Relaxamento e preparação para o sono.</p>
+    </div>
+  </section>
+
+    <!-- Filtros -->
+  <section class="mt-6">
+    <h2 class="text-lg font-semibold mb-2">🎯 Filtrar por objetivo</h2>
+    <div class="flex flex-wrap gap-2">
+      <template x-for="category in categories" :key="category">
+        <button
+          class="px-3 py-1 text-sm rounded-full border border-gray-300 dark:border-gray-600 hover:bg-primary hover:text-white dark:hover:bg-primary-dark transition"
+          :class="{ 'bg-primary text-white': selectedCategory === category }"
+          @click="toggleCategory(category)"
+          x-text="category"
+        ></button>
+      </template>
+    </div>
+  </section>
+
+  <!-- Lista de todos os chás -->
+  <section class="mt-6">
+    <h2 class="text-lg font-semibold mb-2">📋 Todos os Chás</h2>
+    <template x-for="tea in filteredTeas" :key="tea.value">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-3 p-4">
+        <div class="flex justify-between items-center cursor-pointer" @click="tea.open = !tea.open">
+          <div>
+            <h3 class="font-semibold text-base" x-text="tea.label"></h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400" x-text="tea.description"></p>
+          </div>
+          <svg :class="{ 'rotate-180': tea.open }" class="w-4 h-4 transition-transform text-gray-400" fill="none" stroke="currentColor" stroke-width="2"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+        <div x-show="tea.open" x-transition class="mt-2 text-sm text-gray-700 dark:text-gray-300">
+          <p><strong>Sabor:</strong> <span x-text="tea.flavor"></span></p>
+          <p><strong>Categoria:</strong> <span x-text="tea.categories.join(', ')"></span></p>
+          <p><strong>Princípios ativos:</strong> <span x-text="tea.activePrinciples.join(', ')"></span></p>
+        </div>
+      </div>
+    </template>
+  </section>
+
+        </div>
+      </div>
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="text-center text-sm text-gray-500 dark:text-gray-400 py-4 border-t border-gray-200 dark:border-gray-700 mt-6">
+      Desenvolvido como PWA | 🍵 Projeto de apresentação de chás | Modo: <span x-text="mode"></span>
+    </footer>
+  </div>
+
+  <!-- Tailwind e Alpine.js CDN -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+<script>
+  document.addEventListener('alpine:init', () => {
+    Alpine.data('teaApp', () => ({
+      mode: 'light',
+      selectedCategory: null,
+      todayTeas: [],
+      categories: [],
+      allTeas: [],
+      init() {
+        this.allTeas = teaOptions.map(tea => ({ ...tea, open: false }));
+        this.categories = [...new Set(this.allTeas.flatMap(t => t.categories))];
+        this.setTodayTeas();
+      },
+      toggleCategory(category) {
+        this.selectedCategory = this.selectedCategory === category ? null : category;
+      },
+      get filteredTeas() {
+        if (!this.selectedCategory) return this.allTeas;
+        return this.allTeas.filter(t => t.categories.includes(this.selectedCategory));
+      },
+      setTodayTeas() {
+        const now = new Date();
+        const hour = now.getHours();
+        if (hour < 12) {
+          this.todayTeas = ['alecrim', 'canela'];
+        } else if (hour < 18) {
+          this.todayTeas = ['erva-doce', 'alecrim'];
+        } else {
+          this.todayTeas = ['melissa'];
+        }
+      },
+      isTodayTea(value) {
+        return this.todayTeas.includes(value);
+      }
+    }));
+  });
+
+  const teaOptions = [
+    {
+      label: "Camomila",
+      value: "camomila",
+      description: "Calmante natural e digestiva",
+      categories: ["calmante", "digestiva", "anti-inflamatória"],
+      flavor: "Suave, levemente adocicado",
+      activePrinciples: ["Apigenina", "Camazuleno", "Bisabolol"]
+    },
+    {
+      label: "Erva-doce",
+      value: "erva-doce",
+      description: "Auxilia na digestão e cólicas",
+      categories: ["digestiva", "calmante", "antiespasmódica"],
+      flavor: "Adocicado e anisado",
+      activePrinciples: ["Anetol", "Fenchona", "Estragol"]
+    },
+    {
+      label: "Hortelã",
+      value: "hortela",
+      description: "Refrescante, digestiva e expectorante",
+      categories: ["digestiva", "expectorante", "revigorante"],
+      flavor: "Refrescante e mentolado",
+      activePrinciples: ["Mentol", "Mentona", "Flavonoides"]
+    },
+    {
+      label: "Melissa",
+      value: "melissa",
+      description: "Calmante e relaxante",
+      categories: ["calmante", "ansiolítica", "antioxidante"],
+      flavor: "Levemente cítrico e suave",
+      activePrinciples: ["Citral", "Geraniol", "Limoneno"]
+    },
+    {
+      label: "Alecrim",
+      value: "alecrim",
+      description: "Estimulante da memória e antioxidante",
+      categories: ["estimulante", "antioxidante", "digestiva"],
+      flavor: "Aromático, amadeirado e levemente amargo",
+      activePrinciples: ["Ácido rosmarínico", "Cineol", "Carnosol"]
+    },
+    {
+      label: "Gengibre",
+      value: "gengibre",
+      description: "Termogênico e anti-inflamatório",
+      categories: ["termogênico", "digestiva", "anti-inflamatória"],
+      flavor: "Picante e quente",
+      activePrinciples: ["Gingerol", "Shogaol", "Zingerona"]
+    },
+    {
+      label: "Canela",
+      value: "canela",
+      description: "Estimulante e termogênica",
+      categories: ["termogênico", "estimulante", "digestiva"],
+      flavor: "Doce, quente e aromático",
+      activePrinciples: ["Cinamaldeído", "Eugenol", "Ácido cinâmico"]
+    },
+    {
+      label: "Sálvia",
+      value: "salvia",
+      description: "Antisséptica e digestiva",
+      categories: ["digestiva", "anti-inflamatória", "antisséptica"],
+      flavor: "Amargo e herbal",
+      activePrinciples: ["Tujona", "Cineol", "Ácido rosmarínico"]
+    },
+    {
+      label: "Hibisco",
+      value: "hibisco",
+      description: "Diurético e antioxidante",
+      categories: ["diurético", "antioxidante", "emagrecedor"],
+      flavor: "Ácido, levemente frutado",
+      activePrinciples: ["Antocianinas", "Ácido hibísico", "Vitamina C"]
+    },
+    {
+      label: "Boldo",
+      value: "boldo",
+      description: "Hepatoprotetor e digestivo",
+      categories: ["digestiva", "hepática", "anti-inflamatória"],
+      flavor: "Amargo e forte",
+      activePrinciples: ["Boldina", "Flavonoides", "Óleos essenciais"]
+    },
+    {
+      label: "Tanchagem",
+      value: "tanchagem",
+      description: "Expectorante e cicatrizante",
+      categories: ["expectorante", "cicatrizante", "anti-inflamatória"],
+      flavor: "Suave, herbáceo",
+      activePrinciples: ["Aucubina", "Taninos", "Flavonoides"]
+    },
+    {
+      label: "Carqueja",
+      value: "carqueja",
+      description: "Depurativa e digestiva",
+      categories: ["digestiva", "depurativa", "anti-inflamatória"],
+      flavor: "Amargo e intenso",
+      activePrinciples: ["Flavonoides", "Terpenos", "Quercetina"]
+    },
+    {
+      label: "Erva-cidreira",
+      value: "erva-cidreira",
+      description: "Calmante suave e digestiva",
+      categories: ["calmante", "digestiva", "ansiolítica"],
+      flavor: "Suave e cítrico",
+      activePrinciples: ["Citral", "Geraniol", "Linalol"]
+    },
+    {
+      label: "Chá-verde",
+      value: "cha-verde",
+      description: "Antioxidante e termogênico",
+      categories: ["antioxidante", "termogênico", "estimulante"],
+      flavor: "Amargo e herbáceo",
+      activePrinciples: ["Catequinas", "Cafeína", "Taninos"]
+    }
+  ];
+</script>
+
+  
+</body>
+</html>
