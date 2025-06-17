@@ -152,6 +152,14 @@
 <script>
   document.addEventListener('alpine:init', () => {
     Alpine.data('teaApp', () => ({
+      darkMode: false,
+      get formattedDate() {
+        return new Date().toLocaleDateString("pt-BR", {
+          weekday: "long",
+          day: "numeric",
+          month: "long"
+        });
+      },
       mode: 'light',
       selectedCategory: null,
       todayTeas: [],
